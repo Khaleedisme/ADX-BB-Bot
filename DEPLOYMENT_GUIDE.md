@@ -25,7 +25,7 @@ git commit -m "Initial commit: ADX Volatility Waves Bot"
 
 # GitHub-da yeni repo yarat (github.com-da)
 # Sonra:
-git remote add origin https://github.com/YOUR_USERNAME/adx-volatility-bot.git
+git remote add origin https://github.com/Khaleedisme/ADX-BB-Bot.git
 git branch -M main
 git push -u origin main
 ```
@@ -67,6 +67,18 @@ TELEGRAM_USER_ID = 368629145
 ### ✅ Bitdi!
 
 Bot indi 24/7 işləyir. Render.com avtomatik yenidən başladır əgər problem olarsa.
+
+### 🔄 Botu Yeniləmək (Update)
+
+Kodda dəyişiklik etdikdən sonra Render-ə yeniləmək üçün sadəcə bu əmrləri terminalla yazın:
+
+```bash
+git add .
+git commit -m "Update bot code"
+git push origin main
+```
+
+Render avtomatik olaraq yeni kodu görəcək və botu yenidən deploy edəcək. Heç bir şey etməyə ehtiyac yoxdur.
 
 ---
 

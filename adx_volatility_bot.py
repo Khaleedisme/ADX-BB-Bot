@@ -210,14 +210,24 @@ class PaperTradingEngine:
         # Calculate exit fee
         exit_fee = self.calculate_fee(close_margin, LEVERAGE)
         
-        # Calculate PnL
-        if position.side == 'long':
-            pnl_percent = ((exit_price - position.entry_price) / position.entry_price) * 100
-        else:  # short
-            pnl_percent = ((position.entry_price - exit_price) / position.entry_price) * 100
+        # Calculate PnL using CORRECT futures formula
+        # PNL_USD = position_notional * (price_change_percent / 100)
+        # where position_notional = margin * leverage
         
-        # Apply leverage to PnL
-        pnl_amount = (pnl_percent / 100) * close_size
+        # Calculate price change percentage
+        if position.side == 'long':
+            price_change_percent = ((exit_price - position.entry_price) / position.entry_price) * 100
+        else:  # short
+            price_change_percent = ((position.entry_price - exit_price) / position.entry_price) * 100
+        
+        # Calculate notional value (margin * leverage)
+        position_notional = close_margin * LEVERAGE
+        
+        # Calculate PnL in USD (this is the CORRECT formula for futures)
+        pnl_amount = position_notional * (price_change_percent / 100)
+        
+        # PnL percentage for display (leveraged return)
+        pnl_percent = price_change_percent
         
         # Deduct exit fee and add PnL to balance
         self.balance += close_margin + pnl_amount - exit_fee
@@ -1044,13 +1054,43 @@ class TradingBot:
 # 🚀 MAIN ENTRY POINT
 # ============================================================================
 
+# ============================================================================
+# 🚀 MAIN ENTRY POINT with FLASK
+# ============================================================================
+
+import threading
+import os
+from flask import Flask
+
+# Flask app for Render health checks
+app = Flask(__name__)
+
+@app.route("/")
+def health():
+    return "OK", 200
+
 async def main():
     """Main entry point"""
     bot = TradingBot()
     await bot.start_bot()
 
-if __name__ == "__main__":
+def run_bot_thread():
+    """Wrapper to run async bot in a separate thread"""
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
     try:
-        asyncio.run(main())
+        loop.run_until_complete(main())
     except KeyboardInterrupt:
         print("\n✅ Bot stopped by user")
+    finally:
+        loop.close()
+
+if __name__ == "__main__":
+    # Start bot in background thread
+    bot_thread = threading.Thread(target=run_bot_thread, daemon=True)
+    bot_thread.start()
+    
+    # Start Flask server (blocks main thread, satisfying Render)
+    port = int(os.environ.get("PORT", 10000))
+    print(f"🌍 Starting Flask server on port {port}...")
+    app.run(host="0.0.0.0", port=port)
